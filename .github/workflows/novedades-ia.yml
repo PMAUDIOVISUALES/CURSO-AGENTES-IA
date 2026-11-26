@@ -1,0 +1,31 @@
+name: Novedades semanales de IA
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * 1"
+      timezone: Europe/Madrid
+permissions:
+  contents: read
+concurrency:
+  group: novedades-ia
+  cancel-in-progress: false
+jobs:
+  informe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Generar informe
+        id: informe
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python3 scripts/rutina_semanal.py
+      - name: Guardar informe para revisión
+        uses: actions/upload-artifact@v6
+        with:
+          name: novedades-${{ steps.informe.outputs.fecha }}
+          path: novedades/${{ steps.informe.outputs.fecha }}.md
+          if-no-files-found: error
+          retention-days: 30
